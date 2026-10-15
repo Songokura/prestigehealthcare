@@ -26,6 +26,7 @@
     beard: "Здравствуйте! " + SITE + " Интересует пересадка бороды. Хочу записаться на консультацию.",
     trich: "Здравствуйте! " + SITE + " Нужна консультация трихолога по выпадению волос.",
     lor: "Здравствуйте! " + SITE + " Хочу записаться на приём к ЛОРу.",
+    results: "Здравствуйте! " + SITE + " Посмотрел результаты до и после, хочу записаться на бесплатную консультацию по пересадке волос.",
     kontakty: "Здравствуйте! " + SITE + " Хочу записаться на бесплатную консультацию.",
     sticky: "Здравствуйте! " + SITE + " Хочу записаться на бесплатную консультацию."
   } };
@@ -225,6 +226,27 @@
   });
 
   /* ---------- Язык: RU в разметке, KZ и EN подгружаются отдельными файлами ---------- */
+  /* ---------- Бегущая лента: шаг цикла = одна копия, копий хватает на любую ширину ---------- */
+  var rTrack = doc.querySelector(".ribbon-track");
+  var rOrig = rTrack ? [].slice.call(rTrack.children) : [];
+  function buildRibbon() {
+    if (!rTrack || !rOrig.length) return;
+    [].slice.call(rTrack.querySelectorAll(".rb-c")).forEach(function (el) { el.remove(); });
+    var one = rTrack.scrollWidth;
+    if (!one) return;
+    var n = Math.ceil(W.innerWidth / one) + 1;
+    for (var k = 0; k < n; k++) rOrig.forEach(function (el) {
+      var c = el.cloneNode(true); c.removeAttribute("data-i"); c.className = "rb-c"; rTrack.appendChild(c);
+    });
+    var step = rTrack.children[rOrig.length].offsetLeft - rOrig[0].offsetLeft;
+    rTrack.style.setProperty("--rib", step + "px");
+    rTrack.style.setProperty("--rib-t", (step / 60).toFixed(1) + "s");
+  }
+  var rbT;
+  W.addEventListener("resize", function () { clearTimeout(rbT); rbT = setTimeout(buildRibbon, 200); });
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(buildRibbon);
+  buildRibbon();
+
   var I18N = { ru: {} };
   var RU = I18N.ru;
   var iEls = [].slice.call(doc.querySelectorAll("[data-i]"));
@@ -257,6 +279,7 @@
     try { localStorage.setItem("prestige-lang", lang); } catch (e) {}
     fitText();
     updateRails();
+    buildRibbon();
   }
   function loadLang(lang, done) {
     if (I18N[lang] || (lang !== "kk" && lang !== "en")) return done();
