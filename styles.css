@@ -407,3 +407,5 @@ html:not(.js) .plate .txt>*{opacity:1;transform:none}
 .case figcaption span{font-size:14px;color:var(--fg2)}
 .t-dark .arr{border-color:rgba(243,246,244,.3);background:rgba(243,246,244,.06);color:var(--white)}
 .t-dark .arr:hover{background:rgba(243,246,244,.14)}
+.k-map{background:var(--ink)}
+.k-map iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
