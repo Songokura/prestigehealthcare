@@ -13,7 +13,7 @@ window.SITE_EN = {
   "alt.dhi": "Graft implantation with the DHI method",
   "alt.doc": "Darkhan Ondakhanov, hair transplant surgeon, Prestige Healthcare",
   "alt.fue": "FUE graft extraction from the donor area",
-  "alt.hero": "DHI hair transplant at Prestige Healthcare clinic, Astana",
+  "alt.hero": "Doctor Darkhan Ondakhanov performing an eyebrow transplant at Prestige Healthcare, Astana",
   "alt.s1": "Doctor examining a patient's hair under a loupe",
   "alt.s2": "Marking the hairline and donor area with a marker",
   "alt.s3": "A graft under tweezers, prepared grafts in a row",
