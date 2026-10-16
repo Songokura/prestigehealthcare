@@ -1,15 +1,11 @@
-/* Prestige Healthcare. Ванильный JS: плиты и точечная посадка, меню, якоря, лента, петли видео, язык, форма. */
+/* Prestige Healthcare. Ванильный JS: меню, якоря, карточки услуг, ленты, петли видео, параллакс героя, язык, форма. */
 (function () {
   "use strict";
   var doc = document, root = doc.documentElement, W = window;
   root.classList.add("js");
   var ASSET_V = ((doc.currentScript && doc.currentScript.src.match(/[?&]v=([^&]+)/)) || [])[1] || "";
   var REDUCED = W.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var clamp = function (v, a, b) { return Math.max(a === undefined ? 0 : a, Math.min(b === undefined ? 1 : b, v)); };
-  var smooth = function (x) { x = clamp(x); return x * x * (3 - 2 * x); };
-  var easeOut = function (x) { x = clamp(x); return 1 - Math.pow(1 - x, 2.2); };
-  var TOUCH = W.matchMedia("(pointer:coarse)").matches;
-  var VW = W.innerWidth, VH = W.innerHeight;
+  var VW = W.innerWidth;
   var LANG = "ru";
 
   /* ---------- Контакты ---------- */
@@ -17,38 +13,47 @@
 
   /* ---------- WhatsApp: текст собирается в момент клика (фаза захвата на window, совместимо с LeadBot) ---------- */
   var SITE = "Пишу с сайта Prestige Healthcare.";
+  var HI = "Здравствуйте! " + SITE + " ";
   var WA = { ru: {
-    "default": "Здравствуйте! " + SITE + " Хочу записаться на бесплатную консультацию по пересадке волос.",
-    hero: "Здравствуйте! " + SITE + " Хочу записаться на бесплатную консультацию по пересадке волос.",
-    menu: "Здравствуйте! " + SITE + " Хочу записаться на консультацию.",
-    hair: "Здравствуйте! " + SITE + " Интересует пересадка волос (FUE / DHI). Хочу узнать, подойдёт ли мне, и записаться на консультацию.",
-    brows: "Здравствуйте! " + SITE + " Интересует пересадка бровей. Хочу записаться на консультацию.",
-    beard: "Здравствуйте! " + SITE + " Интересует пересадка бороды. Хочу записаться на консультацию.",
-    trich: "Здравствуйте! " + SITE + " Нужна консультация трихолога по выпадению волос.",
-    lor: "Здравствуйте! " + SITE + " Хочу записаться на приём к ЛОРу.",
-    results: "Здравствуйте! " + SITE + " Посмотрел результаты до и после, хочу записаться на бесплатную консультацию по пересадке волос.",
-    kontakty: "Здравствуйте! " + SITE + " Хочу записаться на бесплатную консультацию.",
-    sticky: "Здравствуйте! " + SITE + " Хочу записаться на бесплатную консультацию."
+    "default": HI + "Хочу записаться на бесплатную консультацию.",
+    hdr: HI + "Хочу записаться на консультацию.",
+    hero: HI + "Хочу записаться на бесплатную консультацию по пересадке волос.",
+    menu: HI + "Хочу записаться на консультацию.",
+    hair: HI + "Интересует пересадка волос. Хочу узнать, подойдёт ли мне, и записаться на консультацию.",
+    fue: HI + "Интересует пересадка волос методом FUE. Хочу записаться на консультацию.",
+    dhi: HI + "Интересует пересадка волос методом DHI. Хочу записаться на консультацию.",
+    brows: HI + "Интересует пересадка бровей. Хочу записаться на консультацию.",
+    beard: HI + "Интересует пересадка бороды. Хочу записаться на консультацию.",
+    trich: HI + "Нужна консультация трихолога по выпадению волос.",
+    lor: HI + "Хочу записаться на приём к ЛОРу.",
+    results: HI + "Посмотрел результаты до и после, хочу записаться на бесплатную консультацию по пересадке волос.",
+    doc: HI + "Хочу записаться на консультацию к врачу Дархану Ондаханову.",
+    price: HI + "Хочу узнать стоимость пересадки волос и записаться на консультацию.",
+    pfue: HI + "Хочу узнать стоимость пересадки волос методом FUE.",
+    pdhi: HI + "Хочу узнать стоимость пересадки волос методом DHI.",
+    faq: HI + "У меня вопрос по пересадке волос.",
+    kontakty: HI + "Хочу записаться на бесплатную консультацию.",
+    sticky: HI + "Хочу записаться на бесплатную консультацию."
   } };
   W.addEventListener("click", function (e) {
     var a = e.target && e.target.closest ? e.target.closest("a[data-wa]") : null;
     if (!a) return;
     var key = a.getAttribute("data-wa") || "default";
     var d = WA[LANG] || WA.ru;
-    var text = d[key] || WA.ru[key] || WA.ru["default"];
+    var text = d[key] || d["default"] || WA.ru[key] || WA.ru["default"];
     a.setAttribute("href", "https://wa.me/" + WA_NUM + "?text=" + encodeURIComponent(text));
   }, true);
 
-  /* ---------- fitText для строк заголовка героя ---------- */
+  /* ---------- fitText: заголовок героя не шире колонки (длинные казахские слова) ---------- */
   var h1 = doc.getElementById("h1");
-  function fitLine(sel, prop) {
-    var l = h1.querySelector(sel), avail = h1.clientWidth;
-    if (!l || !avail) return;
-    h1.style.removeProperty(prop);
-    var fs = parseFloat(getComputedStyle(l).fontSize), guard = 0;
-    while (guard++ < 30 && l.scrollWidth > avail + 1 && fs > 20) { fs *= 0.95; h1.style.setProperty(prop, fs + "px"); }
+  function fitText() {
+    if (!h1) return;
+    h1.style.removeProperty("font-size");
+    var fs = parseFloat(getComputedStyle(h1).fontSize), guard = 0;
+    var lines = h1.querySelectorAll(".l1,.l2");
+    function over() { for (var i = 0; i < lines.length; i++) if (lines[i].scrollWidth > h1.clientWidth + 1) return true; return false; }
+    while (guard++ < 20 && over() && fs > 26) { fs *= 0.95; h1.style.fontSize = fs + "px"; }
   }
-  function fitText() { if (!h1) return; fitLine(".l1", "--fs"); fitLine(".l2", "--fs2"); }
 
   /* ---------- Меню ---------- */
   var burger = doc.querySelector(".burger"), menu = doc.getElementById("menu");
@@ -72,14 +77,16 @@
   }
   if (burger) burger.addEventListener("click", function () { var o = doc.body.classList.contains("menu-open"); setMenu(!o, o); });
   doc.addEventListener("keydown", function (e) { if (e.key === "Escape" && doc.body.classList.contains("menu-open")) setMenu(false, true); });
+  W.matchMedia("(min-width:1281px)").addEventListener("change", function (m) { if (m.matches) setMenu(false); });
 
-  /* ---------- Якоря ---------- */
-  var HDR = function () { return parseFloat(getComputedStyle(root).getPropertyValue("--hdr")) || 72; };
+  /* ---------- Якоря: цель под шапку, без смещения ---------- */
+  var hdr = doc.getElementById("hdr");
+  function HDR() { return hdr ? hdr.getBoundingClientRect().height : 72; }
   function targetTop(el) {
     var r = el.getBoundingClientRect().top + W.pageYOffset;
-    if (el.classList.contains("pw")) return r;
-    if (el.classList.contains("sec")) return r - HDR();
-    return r - HDR() - 14;
+    if (el.id === "top") return 0;
+    if (el.classList.contains("sec")) return r - HDR() + 1;
+    return r - HDR() - 16;
   }
   function goTo(id, instant) {
     var el = doc.getElementById(id);
@@ -107,92 +114,58 @@
     }
   });
 
-  /* ---------- Плиты и точечная посадка ---------- */
-  var pws = [].slice.call(doc.querySelectorAll(".pw"));
-  var sticky = doc.getElementById("sticky"), kont = doc.getElementById("kontakty");
-  var hdr = doc.getElementById("hdr");
-  var heroTxt = doc.querySelector(".hero-txt");
-  var INTRO = (location.hash.length > 1 || W.pageYOffset > 80 || REDUCED) ? 1 : 0;
-  var introStart = 0, ticking = false;
+  /* ---------- Карточки услуг: «Подробнее» ---------- */
+  [].forEach.call(doc.querySelectorAll(".more[aria-controls]"), function (b) {
+    b.addEventListener("click", function () {
+      var box = doc.getElementById(b.getAttribute("aria-controls")); if (!box) return;
+      var open = b.getAttribute("aria-expanded") !== "true";
+      b.setAttribute("aria-expanded", open ? "true" : "false");
+      box.hidden = !open;
+    });
+  });
 
-  var st = pws.map(function (pw) { return { open: -1, out: {}, sigs: [].slice.call(pw.querySelectorAll(".sig")) }; });
-  function put(pw, s, k, v) { if (s.out[k] !== v) { s.out[k] = v; pw.style.setProperty(k, v); } }
+  /* ---------- Скролл: шапка, липкая панель, параллакс фото героя ---------- */
+  var sticky = doc.getElementById("sticky"), kont = doc.getElementById("kontakty");
+  var heroMedia = doc.querySelector(".hero-media");
+  var PARALLAX = !REDUCED && W.matchMedia("(min-width:761px) and (hover:hover)").matches;
+  var ticking = false;
   function update() {
     ticking = false;
-    var H = VH;
-    var pageY = W.pageYOffset;
-    var kontTop = kont ? kont.getBoundingClientRect().top : null;
-    var rects = [], nxtTops = [], i;
-    for (i = 0; i < pws.length; i++) {
-      rects.push(pws[i].getBoundingClientRect());
-      var nx = pws[i].nextElementSibling;
-      nxtTops.push(nx ? nx.getBoundingClientRect().top : null);
-    }
-    for (i = 0; i < pws.length; i++) {
-      var pw = pws[i], r = rects[i], s = st[i];
-      var near = r.bottom > -H * 0.5 && r.top < H * 1.5;
-      if (!near && s.open >= 0) continue;
-      var enter = clamp(1 - r.top / H);
-      var stay = r.height > H ? clamp(-r.top / (r.height - H)) : 0;
-      var exit = nxtTops[i] !== null ? clamp(1 - nxtTops[i] / H) : 0;
-      var isHero = pw.classList.contains("pw-hero");
-      /* посадка: точки растут по въезду плиты, старт с 22% хода, легко дотягиваются */
-      var open = isHero ? easeOut(INTRO) : easeOut(smooth((enter - 0.22) / 0.6));
-      if (REDUCED) open = 1;
-      s.open = open;
-      put(pw, s, "--enter", enter.toFixed(4));
-      put(pw, s, "--stay", stay.toFixed(4));
-      put(pw, s, "--exit", exit.toFixed(4));
-      put(pw, s, "--open", open.toFixed(4));
-      if (isHero) {
-        put(pw, s, "--intro", open.toFixed(4));
-        if (heroTxt) heroTxt.classList.toggle("done", open >= 0.999);
-      }
-      /* посадка завершена: маска снята, кадр чистый. У героя маска возвращается на выходе (извлечение) */
-      var done = isHero ? (open >= 0.999 && (exit < 0.005 || VW <= 760)) : open >= 0.999;
-      for (var g = 0; g < s.sigs.length; g++) s.sigs[g].classList.toggle("done", done);
-      var plate = pw.firstElementChild;
-      if (plate) plate.classList.toggle("gone", exit >= 1);
-      if (!s.txts) s.txts = pw.querySelectorAll(".txt");
-      var on = isHero ? INTRO > 0.3 : enter > 0.62;
-      if (s.on !== on) { s.on = on; for (var t = 0; t < s.txts.length; t++) s.txts[t].classList.toggle("on", on); }
-    }
+    var y = W.pageYOffset, H = W.innerHeight;
+    if (hdr) hdr.classList.toggle("scrolled", y > 12);
     if (sticky) {
-      var show = pageY > H * 0.55;
-      if (kontTop !== null && kontTop < H * 0.5) show = false;
+      var show = y > H * 0.5;
+      if (kont) { var kt = kont.getBoundingClientRect().top; if (kt < H * 0.5) show = false; }
       sticky.classList.toggle("show", show);
     }
-    if (hdr) hdr.classList.toggle("scrolled", pageY > 12);
+    if (PARALLAX && heroMedia && y < H * 1.2) heroMedia.style.setProperty("--py", (y * 0.12).toFixed(1) + "px");
   }
   function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
   W.addEventListener("scroll", onScroll, { passive: true });
   W.addEventListener("resize", function () {
     /* на телефоне смена только высоты - это адресная строка: раскладку не пересчитываем */
-    if (W.innerWidth !== VW) { VW = W.innerWidth; VH = W.innerHeight; fitText(); updateRails(); }
-    else if (!TOUCH) VH = W.innerHeight;
+    if (W.innerWidth !== VW) { VW = W.innerWidth; fitText(); updateRails(); }
     onScroll();
   });
-  function runIntro(ts) {
-    if (!introStart) introStart = ts;
-    INTRO = clamp((ts - introStart) / 1250);
-    update();
-    if (INTRO < 1) requestAnimationFrame(runIntro);
-  }
 
-  /* ---------- Петли видео: src подставляется, когда карточка в кадре ---------- */
+  /* ---------- Петли видео: src подставляется, когда кадр в зоне видимости ---------- */
   var loops = [].slice.call(doc.querySelectorAll("video.loop"));
   function playLoop(v) {
-    if (!v.getAttribute("src")) { v.setAttribute("src", v.getAttribute("data-src")); v.load(); }
+    if (!v.getAttribute("src")) {
+      v.setAttribute("src", v.getAttribute("data-src"));
+      v.addEventListener("playing", function () { v.classList.add("playing"); }, { once: true });
+      v.load();
+    }
     var p = v.play(); if (p && p.catch) p.catch(function () {});
   }
   if (loops.length && !REDUCED && "IntersectionObserver" in W) {
     var vio = new IntersectionObserver(function (es) {
       es.forEach(function (x) { if (x.isIntersecting) playLoop(x.target); else if (!x.target.paused) x.target.pause(); });
-    }, { threshold: 0.45 });
+    }, { threshold: 0.35 });
     loops.forEach(function (v) { vio.observe(v); });
   }
 
-  /* ---------- Лента со стрелками ---------- */
+  /* ---------- Ленты со стрелками ---------- */
   var rails = [].slice.call(doc.querySelectorAll(".rail"));
   function railStep(rail) {
     var card = rail.firstElementChild; if (!card) return 300;
@@ -226,27 +199,6 @@
   });
 
   /* ---------- Язык: RU в разметке, KZ и EN подгружаются отдельными файлами ---------- */
-  /* ---------- Бегущая лента: шаг цикла = одна копия, копий хватает на любую ширину ---------- */
-  var rTrack = doc.querySelector(".ribbon-track");
-  var rOrig = rTrack ? [].slice.call(rTrack.children) : [];
-  function buildRibbon() {
-    if (!rTrack || !rOrig.length) return;
-    [].slice.call(rTrack.querySelectorAll(".rb-c")).forEach(function (el) { el.remove(); });
-    var one = rTrack.scrollWidth;
-    if (!one) return;
-    var n = Math.ceil(W.innerWidth / one) + 1;
-    for (var k = 0; k < n; k++) rOrig.forEach(function (el) {
-      var c = el.cloneNode(true); c.removeAttribute("data-i"); c.className = "rb-c"; rTrack.appendChild(c);
-    });
-    var step = rTrack.children[rOrig.length].offsetLeft - rOrig[0].offsetLeft;
-    rTrack.style.setProperty("--rib", step + "px");
-    rTrack.style.setProperty("--rib-t", (step / 60).toFixed(1) + "s");
-  }
-  var rbT;
-  W.addEventListener("resize", function () { clearTimeout(rbT); rbT = setTimeout(buildRibbon, 200); });
-  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(buildRibbon);
-  buildRibbon();
-
   var I18N = { ru: {} };
   var RU = I18N.ru;
   var iEls = [].slice.call(doc.querySelectorAll("[data-i]"));
@@ -279,7 +231,6 @@
     try { localStorage.setItem("prestige-lang", lang); } catch (e) {}
     fitText();
     updateRails();
-    buildRibbon();
   }
   function loadLang(lang, done) {
     if (I18N[lang] || (lang !== "kk" && lang !== "en")) return done();
@@ -306,6 +257,7 @@
     var saved = null; try { saved = localStorage.getItem("prestige-lang"); } catch (e) {}
     var lang = forced || saved || "ru";
     if (lang !== "ru") setLang(lang);
+    else if (forced) { try { localStorage.setItem("prestige-lang", "ru"); } catch (e2) {} }
   })();
 
   /* ---------- Проявление секций ---------- */
@@ -349,14 +301,12 @@
     if (location.hash.length > 1) {
       var id = location.hash.slice(1);
       goTo(id, true);
-      setTimeout(function () { goTo(id, true); update(); }, 60);
-      setTimeout(function () { goTo(id, true); update(); }, 500);
+      setTimeout(function () { goTo(id, true); }, 500);
     }
     update();
-    if (INTRO < 1) requestAnimationFrame(runIntro);
     updateRails();
   }
-  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { fitText(); update(); });
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { fitText(); updateRails(); });
   if (doc.readyState === "complete") start(); else W.addEventListener("load", start);
   update();
 })();
