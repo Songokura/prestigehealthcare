@@ -44,6 +44,26 @@
     a.setAttribute("href", "https://wa.me/" + WA_NUM + "?text=" + encodeURIComponent(text));
   }, true);
 
+  /* ---------- Конверсии Google Ads ---------- */
+  var AW = "AW-18522954056/", CV = { tel: "NohFCKLNwKIdEMiyt4BF", form: "2A1DCNyVuKIdEMiyt4BF", contact: "GEz3CKOkuKIdEMiyt4BF" };
+  var sentCv = {};
+  function conv(kind) {
+    if (typeof W.gtag !== "function") return;
+    // один раз за сеанс на каждый тип; ценность задаётся в настройках конверсии в кабинете
+    var key = "cv-" + kind;
+    if (sentCv[kind]) return;
+    try { if (W.sessionStorage.getItem(key)) return; W.sessionStorage.setItem(key, "1"); } catch (err) {}
+    sentCv[kind] = 1;
+    W.gtag("event", "conversion", { send_to: AW + CV[kind], transport_type: "beacon" });
+  }
+  W.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a) return;
+    var h = a.getAttribute("href") || "";
+    if (/^tel:/i.test(h)) conv("tel");
+    else if (/wa\.me|whatsapp|^mailto:/i.test(h)) conv("contact");
+  }, true);
+
   /* ---------- fitText: заголовок героя не шире колонки (длинные казахские слова) ---------- */
   var h1 = doc.getElementById("h1");
   function fitText() {
@@ -288,6 +308,7 @@
       if (f.message.value.trim()) lines.push(L.msg + ": " + f.message.value.trim());
       var url = "https://wa.me/" + WA_NUM + "?text=" + encodeURIComponent(lines.join("\n"));
       W.open(url, "_blank", "noopener");
+      conv("form");
       if (thanks) { thanks.hidden = false; try { thanks.focus({ preventScroll: true }); } catch (err) {} }
       form.reset();
     });
